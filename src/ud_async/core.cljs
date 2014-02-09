@@ -6,113 +6,117 @@
             [goog.events :as evts]
             [goog.net.XhrIo :as XhrIo]
             [leaf.core :refer [log]])
-  (:require-macros [cljs.core.async.macros :refer [go alt! go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go alt! go-loop]]
+                   [ud-async.macros :refer [run]]))
 
-;; standard async
-;; --------------
+(run
 
-#_(log "Hello, Unified Diff!")
+  ;; standard async
+  ;; --------------
 
-#_(log (chan))
+  #_(log "Hello, Unified Diff!")
 
-#_(log (put! (chan) :abc))
+  #_(log (chan))
 
-#_(log (take! (chan) log))
+  #_(log (put! (chan) :abc))
 
-#_(let [c (chan)]
-  (put! c "Something Nice")
-  (take! c log))
+  #_(log (take! (chan) log))
 
-;; Go Blocks
-;; ---------
+  #_(let [c (chan)]
+    (put! c "Something Nice")
+    (take! c log))
 
-#_(log (<! (chan)))
+  ;; Go Blocks
+  ;; ---------
 
-#_(log (>! (chan)))
+  #_(log (<! (chan)))
 
-#_(go (log (<! (chan))))
+  #_(log (>! (chan)))
 
-#_(let [c (chan)]
-  (go
-    (>! c "Channel operations block!")
-    (log (<! c))))
+  #_(go (log (<! (chan))))
 
-#_(let [c (chan)]
-  (go
-    (>! c "Can anyone hear me?"))
-  (go
-    (log (<! c))))
+  #_(let [c (chan)]
+    (go
+      (>! c "Channel operations block!")
+      (log (<! c))))
 
-#_(let [c (chan)]
-  (go
-    (log (<! c)))
-  (go
-    (>! c "Does order matter?")))
+  #_(let [c (chan)]
+    (go
+      (>! c "Can anyone hear me?"))
+    (go
+      (log (<! c))))
 
-#_(let [c (chan)]
-  (go
-    (log "Knock knock.")
-    (log (<! c))
-    (log "Doctor who!"))
-  (go
-    (log "Who's there?")
-    (>! c "Doctor.")))
+  #_(let [c (chan)]
+    (go
+      (log (<! c)))
+    (go
+      (>! c "Does order matter?")))
 
-;; Event Handling
-;; --------------
+  #_(let [c (chan)]
+    (go
+      (log "Knock knock.")
+      (log (<! c))
+      (log "Doctor who!"))
+    (go
+      (log "Who's there?")
+      (>! c "Doctor.")))
 
-(defn events [type el]
-  (let [out (chan)]
-    (.addEventListener el type
-      #(put! out %))
-    out))
+  ;; Event Handling
+  ;; --------------
 
-#_(let [c (events "mousemove" js/window)]
-  (go
-    (while true
-      (log (<! c)))))
+  (defn events [type el]
+    (let [out (chan)]
+      (.addEventListener el type
+        #(put! out %))
+      out))
 
-;; Sequence Operations
-;; -------------------
-
-(defn map [f in]
-  (let [out (chan)]
+  #_(let [c (events "mousemove" js/window)]
     (go
       (while true
-        (>! out (f (<! in)))))
-    out))
+        (log (<! c)))))
 
-(defn ->coords [evt]
-  [(.-clientX evt)
-   (.-clientY evt)])
+  ;; Sequence Operations
+  ;; -------------------
 
-#_(let [c (map ->coords (events "mousemove" js/window))]
-  (go
-    (while true
-      (log (pr-str (<! c))))))
+  (defn map [f in]
+    (let [out (chan)]
+      (go
+        (while true
+          (>! out (f (<! in)))))
+      out))
 
-;; Timeouts
-;; --------
+  (defn ->coords [evt]
+    [(.-clientX evt)
+     (.-clientY evt)])
 
-#_(go
-  (log "Goooooooo!")
-  (<! (timeout 3000))
-  (log "And relax :)"))
+  #_(let [c (map ->coords (events "mousemove" js/window))]
+    (go
+      (while true
+        (log (pr-str (<! c))))))
 
-;; Ajax
-;; ----
+  ;; Timeouts
+  ;; --------
 
-(defn ajax [url]
-  (let [out (chan)
-        xhr (goog.net.XhrIo.)
-        cb #(put! out %)]
-    (.send xhr url)
-    (goog.events/listen xhr "complete" cb)
-    out))
+  #_(go
+    (log "Goooooooo!")
+    (<! (timeout 3000))
+    (log "And relax :)"))
 
-#_(go
-  (log "Do some ajax...")
-  (let [url "http://api.icndb.com"
-        res (<! (ajax url))]
-    (log "done! got:" res)))
+  ;; Ajax
+  ;; ----
 
+  (defn ajax [url]
+    (let [out (chan)
+          xhr (goog.net.XhrIo.)
+          cb #(put! out %)]
+      (.send xhr url)
+      (goog.events/listen xhr "complete" cb)
+      out))
+
+  #_(go
+    (log "Do some ajax...")
+    (let [url "http://api.icndb.com"
+          res (<! (ajax url))]
+      (log "done! got:" res)))
+
+)
