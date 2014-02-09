@@ -2,7 +2,8 @@
 # core.async Talk Resources
 
 This repository contains the demo portion of a talk I plan to give at Unified 
-Diff on core.async. It's heavily inspired by [David Nolen's hsasync](https://github.com/swannodette/hs-async).
+Diff on core.async. It's heavily inspired by [David Nolen's hs-async](https://github.com/swannodette/hs-async)
+repository.
 
 ## Usage
 
